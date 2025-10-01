@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package notion;
+
+import "google/protobuf/empty.proto";
+
+service NotionService {
+  rpc GetCommands (google.protobuf.Empty) returns (ListCommandsResponse);
+  rpc GetCommandDetail (GetNotionByPathRequest) returns (CommandDetailResponse);
+  rpc GetStarterKits (google.protobuf.Empty) returns (ListStarterResponse);
+  rpc GetStarterKitDetail (GetNotionByPathRequest) returns (StarterKitDetailResponse);
+}
+
+// Request
+message GetNotionByPathRequest {
+  string path = 1;
+}
+
+// Response
+message ListCommandsResponse {
+  repeated CommandResponse commands = 1;
+}
+message CommandResponse {
+  string title = 1;
+  string description = 2;
+  string command = 3;
+  string path = 4;
+  repeated string tags = 5;
+  bool detail = 6;
+};
+message CommandDetailResponse {
+  string markdown = 1;
+}
+
+message ListStarterResponse {
+  repeated StarterResponse starters = 1;
+}
+message StarterResponse {
+  string title = 1;
+  string description = 2;
+  string path = 3;
+  repeated string tags = 4;
+  bool detail = 5;
+}
+message StarterKitDetailResponse{
+  string markdown = 1;
+}

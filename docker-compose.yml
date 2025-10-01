@@ -1,0 +1,63 @@
+services:
+  client:
+    container_name: client_container
+    platform: linux/amd64
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    command: ['npm', 'run', 'dev']
+    volumes:
+      - ./client:/app
+    ports:
+      - '3000:3000'
+    env_file:
+      - .client.env
+  gateway:
+    container_name: gateway_container
+    platform: linux/amd64
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    command: ['npm', 'run', 'dev']
+    volumes:
+      - ./gateway:/app
+    ports:
+      - '8000:8000'
+    depends_on:
+      - content-sync_service
+      - content-api_service
+  content-sync_service:
+    container_name: content-sync_container
+    platform: linux/amd64
+    build:
+      context: ./services/content-sync_service
+      dockerfile: Dockerfile
+    command: ['npm', 'run', 'dev']
+    volumes:
+      - ./services/content-sync_service:/app
+    ports:
+      - '8010:8010'
+    env_file:
+      - .content-sync.env
+    healthcheck:
+      test: ['CMD-SHELL', 'nc -z localhost 50051 || exit 1']
+      interval: 10s
+      timeout: 2s
+      retries: 10
+  content-api_service:
+    container_name: content-api_container
+    platform: linux/amd64
+    build:
+      context: ./services/content-api_service
+      dockerfile: Dockerfile
+    command: ['npm', 'run', 'dev']
+    volumes:
+      - ./services/content-api_service:/app
+    ports:
+      - '8020:8020'
+    env_file:
+      - .content-api.env
+  redis:
+    image: redis:7.2
+    ports:
+      - '6379:6379'

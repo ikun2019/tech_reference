@@ -1,0 +1,26 @@
+{
+	"name": "app",
+	"version": "1.0.0",
+	"main": "server.js",
+	"scripts": {
+		"dev": "nodemon ./src/server.js",
+		"start": "node ./src/server.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"devDependencies": {
+		"nodemon": "^3.1.10"
+	},
+	"dependencies": {
+		"@grpc/grpc-js": "^1.13.4",
+		"@notionhq/client": "^4.0.1",
+		"@supabase/supabase-js": "^2.53.0",
+		"express": "^5.1.0",
+		"google-protobuf": "^3.21.4",
+		"ioredis": "^5.7.0",
+		"node-cron": "^4.2.1",
+		"notion-to-md": "^3.1.9"
+	}
+}
