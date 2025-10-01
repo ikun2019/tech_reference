@@ -5,5 +5,8 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+COPY scripts/healthcheck.js ./scripts/healthcheck.js
+
+EXPOSE 8020
 
 CMD ["npm", "run", "start"]

@@ -1,0 +1,85 @@
+services:
+  traefik:
+    command:
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      # - "--providers.docker.network=techreference_traefik-net"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=0215.miyatto@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--ping=true"
+      - "--ping.entryPoint=web"
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+  client:
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "3000:3000"
+  gateway:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gateway.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.gateway.entrypoints=web,websecure"
+      - "traefik.http.services.gateway.loadbalancer.server.port=8000"
+      - "traefik.http.routers.gateway.tls.certresolver=myresolver"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "scripts/healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+  content-sync_service:
+    labels:
+      - "traefik.enable=false"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "scripts/healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+  content-api_service:
+    labels:
+      - "traefik.enable=false"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "scripts/healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+  coupon_service:
+    labels:
+      - "traefik.enable=false"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "scripts/healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+  redis:
+    labels:
+      - "traefik.enable=false"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

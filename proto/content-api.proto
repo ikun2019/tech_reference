@@ -21,12 +21,15 @@ message ListCommandsResponse {
   repeated CommandResponse commands = 1;
 }
 message CommandResponse {
-  string title = 1;
-  string description = 2;
-  string command = 3;
-  string path = 4;
-  repeated string tags = 5;
-  bool detail = 6;
+  repeated string tags = 1;
+  repeated string levels = 2;
+  repeated string categories = 3;
+  int32 no = 4;
+  string title = 5;
+  string description = 6;
+  string command = 7;
+  string path = 8;
+  bool detail = 9;
 };
 message CommandDetailResponse {
   string markdown = 1;

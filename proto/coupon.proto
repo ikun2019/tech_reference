@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package coupon;
+
+service CouponService {
+  rpc UnlockCoupon (UnlockCouponRequest) returns (UnlockCouponResponse);
+  rpc GetUnlockCategories(GetUnlockCategoriesRequest) returns (GetUnlockCategoriesResponse);
+}
+
+// Request
+message UnlockCouponRequest {
+  string user_id = 1;
+  string coupon_id = 2;
+}
+message GetUnlockCategoriesRequest {
+  string user_id = 1;
+}
+
+// Response
+message UnlockCouponResponse {
+  bool success = 1;
+  string unlocked = 2; // cagegory
+  string error = 3; // message
+}
+message GetUnlockCategoriesResponse {
+  repeated string categories = 1;
+}

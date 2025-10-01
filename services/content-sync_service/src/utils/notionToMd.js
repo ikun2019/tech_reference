@@ -7,9 +7,39 @@ const notionToken = fs.existsSync(process.env.NOTION_TOKEN_FILE) ? fs.readFileSy
 const notion = new Client({ auth: notionToken });
 const n2m = new NotionToMarkdown({ notionClient: notion });
 
-const getDatabasePages = async (databaseId) => {
-  const response = await notion.databases.query({ database_id: databaseId });
-  return response.results;
+const escAttr = (str = '') =>
+  String(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"');
+
+n2m.setCustomTransformer('code', async (block) => {
+  const langRaw = block.code?.language || '';
+  const lang = langRaw.toLowerCase() === 'plain text' ? '' : langRaw;
+  const content = (block.code?.rich_text || [])
+    .map(t => t.plain_text || '')
+    .join('');
+  const caption = (block.code?.caption?.[0]?.plain_text || '').trim();
+  const meta = caption ? `caption="${escAttr(caption)}"` : '';
+
+  return `\n\`\`\`${lang}${meta}\n${content}\n\`\`\`\n`;
+});
+
+const getDatabasePages = async (databaseId, query = {}) => {
+  let results = [];
+  let cursor;
+  do {
+    const response = await notion.databases.query({
+      database_id: databaseId,
+      start_cursor: cursor,
+      page_size: 100,
+      ...query
+    });
+    if (response?.results?.length) {
+      results = results.concat(response.results);
+    }
+    cursor = response.has_more ? response.next_cursor : undefined;
+  } while (cursor);
+  return results;
 };
 
 const notionToMarkdown = async (pageId) => {

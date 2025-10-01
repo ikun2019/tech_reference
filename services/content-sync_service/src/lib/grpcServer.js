@@ -1,10 +1,16 @@
 const grpc = require('@grpc/grpc-js');
+const http = require('http');
 
 // * Graceful Shutdown
-const shutdown = (server) => {
+const shutdown = (server, healthServer) => {
   if (server) {
     server.tryShutdown(() => {
       console.log('🔴 content-sync_service gRPC server is shut down');
+    });
+  }
+  if (healthServer) {
+    healthServer.close(() => {
+      console.log('🔴 content-sync_service health check is shut down');
     });
   }
 };
@@ -19,6 +25,19 @@ exports.startServer = () => {
     console.log('🟢 content-sync_service gRPC server is running');
   });
 
-  process.on('SIGINT', () => shutdown(server));
-  process.on('SIGTERM', () => shutdown(server));
+  const healthServer = http.createServer((req, res) => {
+    if (req.url === '/health') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('OK');
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
+  });
+  healthServer.listen(8080, () => {
+    console.log('🟢 content-sync_service health check');
+  });
+
+  process.on('SIGINT', () => shutdown(server, healthServer));
+  process.on('SIGTERM', () => shutdown(server, healthServer));
 };

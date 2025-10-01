@@ -21,11 +21,14 @@ cron.schedule('*/10 * * * *', async () => {
       const pageId = page.id;
 
       // Notion プロパティの安全アクセス
+      const level = page.properties?.Level?.multi_select?.map(l => l.name) ?? [];
+      const number = page.properties?.No?.number ?? null;
       const title = page.properties?.Title?.title?.[0]?.plain_text ?? '';
       const description = page.properties?.Description?.rich_text?.[0]?.plain_text ?? '';
       const command = page.properties?.Command?.rich_text?.[0]?.plain_text ?? '';
-      const path = page.properties?.Path?.rich_text?.[0]?.plain_text ?? '';
+      const path = page.properties?.Path?.rich_text?.[0]?.plain_text?.trim();
       const tags = page.properties?.Tags?.multi_select?.map(t => t.name) ?? [];
+      const category = page.properties?.Category?.multi_select?.map(c => c.name) ?? [];
       const publish = page.properties?.Publish?.checkbox ?? false;
 
       // 直近のメタ情報を取得（存在しない場合は null を返す）
@@ -52,11 +55,14 @@ cron.schedule('*/10 * * * *', async () => {
         // 公開：Markdown 生成して upsert
         const markdown = await notionToMarkdown(pageId);
         const upsertPayload = {
+          tags,
+          level,
+          number,
           title,
           description,
           command,
           path,
-          tags,
+          category,
           markdown: markdown ?? '',
         };
 

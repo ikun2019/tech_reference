@@ -1,0 +1,39 @@
+services:
+  traefik:
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--entryPoints.traefik.address=:8080"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+  client:
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0", "-p", "3000"]
+    volumes:
+      - ./client:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.client.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.client.entrypoints=web"
+      - "traefik.http.services.client.loadbalancer.server.port=3000"
+  gateway:
+    command: ["npm", "run", "dev"]
+    volumes:
+      - ./gateway:/app
+  content-sync_service:
+    command: ["npm", "run", "dev"]
+    volumes:
+      - ./services/content-sync_service:/app
+  content-api_service:
+    command: ["npm", "run", "dev"]
+    volumes:
+      - ./services/content-api_service:/app
+  coupon_service:
+    command: ["npm", "run", "dev"]
+    volumes:
+      - ./services/coupon_service:/app

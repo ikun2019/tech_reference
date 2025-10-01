@@ -21,12 +21,25 @@ exports.getCommands = async (call, callback) => {
         item.setDescription(command.description);
         item.setCommand(command.command);
         item.setPath(command.path);
+        item.setNo(command.no);
+        const level = Array.isArray(command.levelsList)
+          ? command.levelsList
+          : typeof command.levelsList === 'string'
+            ? [command.levelsList]
+            : []
+        item.setLevelsList(level);
         const tags = Array.isArray(command.tagsList)
           ? command.tagsList
           : typeof command.tagsList === 'string'
             ? [command.tagsList]
             : [];
         item.setTagsList(tags);
+        const categories = Array.isArray(command.categoriesList)
+          ? command.categoriesList
+          : typeof command.categoriesList === 'string'
+            ? [command.categoriesList]
+            : [];
+        item.setCategoriesList(categories);
         item.setDetail(command.detail);
         response.addCommands(item);
       });
@@ -43,11 +56,26 @@ exports.getCommands = async (call, callback) => {
       item.setDescription(command.description);
       item.setCommand(command.command);
       item.setPath(command.path);
+      item.setNo(command.number);
+      item.setLevelsList(
+        Array.isArray(command.level)
+          ? command.level
+          : typeof command.level === 'string'
+            ? [command.level]
+            : []
+      )
       item.setTagsList(
         Array.isArray(command.tags)
           ? command.tags
           : typeof command.tags === 'string'
             ? [command.tags]
+            : []
+      );
+      item.setCategoriesList(
+        Array.isArray(command.category)
+          ? command.category
+          : typeof command.category === 'string'
+            ? [command.category]
             : []
       );
       const hasDetail = command.markdown && command.markdown.trim() !== '' ? true : false;
@@ -186,13 +214,13 @@ exports.getStarterKitDetail = async (call, callback) => {
   const { path } = call.request.toObject();
   const cacheKey = `starter-markdown:${path}`;
   try {
-    // const cached = await redis.get(cacheKey);
-    // if(cached){
-    //   const parsed = JSON.parse(cached);
-    //   const response = new StarterKitDetailResponse();
-    //   response.setMarkdown(parsed);
-    //   return callback(null,response);
-    // }
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      const response = new StarterKitDetailResponse();
+      response.setMarkdown(parsed);
+      return callback(null, response);
+    }
 
     // pathをキーにmarkdownを取得
     const { data, error } = await supabase

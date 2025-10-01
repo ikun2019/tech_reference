@@ -473,7 +473,7 @@ proto.notion.ListCommandsResponse.prototype.clearCommandsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.notion.CommandResponse.repeatedFields_ = [5];
+proto.notion.CommandResponse.repeatedFields_ = [1,2,3];
 
 
 
@@ -506,12 +506,15 @@ proto.notion.CommandResponse.prototype.toObject = function(opt_includeInstance) 
  */
 proto.notion.CommandResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    title: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    description: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    command: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    path: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    tagsList: (f = jspb.Message.getRepeatedField(msg, 5)) == null ? undefined : f,
-    detail: jspb.Message.getBooleanFieldWithDefault(msg, 6, false)
+    tagsList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f,
+    levelsList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
+    categoriesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f,
+    no: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    title: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    description: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    command: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    path: jspb.Message.getFieldWithDefault(msg, 8, ""),
+    detail: jspb.Message.getBooleanFieldWithDefault(msg, 9, false)
   };
 
   if (includeInstance) {
@@ -550,25 +553,37 @@ proto.notion.CommandResponse.deserializeBinaryFromReader = function(msg, reader)
     switch (field) {
     case 1:
       var value = /** @type {string} */ (reader.readString());
-      msg.setTitle(value);
+      msg.addTags(value);
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setDescription(value);
+      msg.addLevels(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
-      msg.setCommand(value);
+      msg.addCategories(value);
       break;
     case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setPath(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setNo(value);
       break;
     case 5:
       var value = /** @type {string} */ (reader.readString());
-      msg.addTags(value);
+      msg.setTitle(value);
       break;
     case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setDescription(value);
+      break;
+    case 7:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCommand(value);
+      break;
+    case 8:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPath(value);
+      break;
+    case 9:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setDetail(value);
       break;
@@ -601,45 +616,66 @@ proto.notion.CommandResponse.prototype.serializeBinary = function() {
  */
 proto.notion.CommandResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getTagsList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      1,
+      f
+    );
+  }
+  f = message.getLevelsList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      2,
+      f
+    );
+  }
+  f = message.getCategoriesList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      3,
+      f
+    );
+  }
+  f = message.getNo();
+  if (f !== 0) {
+    writer.writeInt32(
+      4,
+      f
+    );
+  }
   f = message.getTitle();
   if (f.length > 0) {
     writer.writeString(
-      1,
+      5,
       f
     );
   }
   f = message.getDescription();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      6,
       f
     );
   }
   f = message.getCommand();
   if (f.length > 0) {
     writer.writeString(
-      3,
+      7,
       f
     );
   }
   f = message.getPath();
   if (f.length > 0) {
     writer.writeString(
-      4,
-      f
-    );
-  }
-  f = message.getTagsList();
-  if (f.length > 0) {
-    writer.writeRepeatedString(
-      5,
+      8,
       f
     );
   }
   f = message.getDetail();
   if (f) {
     writer.writeBool(
-      6,
+      9,
       f
     );
   }
@@ -647,83 +683,11 @@ proto.notion.CommandResponse.serializeBinaryToWriter = function(message, writer)
 
 
 /**
- * optional string title = 1;
- * @return {string}
- */
-proto.notion.CommandResponse.prototype.getTitle = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.notion.CommandResponse} returns this
- */
-proto.notion.CommandResponse.prototype.setTitle = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional string description = 2;
- * @return {string}
- */
-proto.notion.CommandResponse.prototype.getDescription = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.notion.CommandResponse} returns this
- */
-proto.notion.CommandResponse.prototype.setDescription = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string command = 3;
- * @return {string}
- */
-proto.notion.CommandResponse.prototype.getCommand = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.notion.CommandResponse} returns this
- */
-proto.notion.CommandResponse.prototype.setCommand = function(value) {
-  return jspb.Message.setProto3StringField(this, 3, value);
-};
-
-
-/**
- * optional string path = 4;
- * @return {string}
- */
-proto.notion.CommandResponse.prototype.getPath = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.notion.CommandResponse} returns this
- */
-proto.notion.CommandResponse.prototype.setPath = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
-};
-
-
-/**
- * repeated string tags = 5;
+ * repeated string tags = 1;
  * @return {!Array<string>}
  */
 proto.notion.CommandResponse.prototype.getTagsList = function() {
-  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 5));
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 1));
 };
 
 
@@ -732,7 +696,7 @@ proto.notion.CommandResponse.prototype.getTagsList = function() {
  * @return {!proto.notion.CommandResponse} returns this
  */
 proto.notion.CommandResponse.prototype.setTagsList = function(value) {
-  return jspb.Message.setField(this, 5, value || []);
+  return jspb.Message.setField(this, 1, value || []);
 };
 
 
@@ -742,7 +706,7 @@ proto.notion.CommandResponse.prototype.setTagsList = function(value) {
  * @return {!proto.notion.CommandResponse} returns this
  */
 proto.notion.CommandResponse.prototype.addTags = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 5, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 1, value, opt_index);
 };
 
 
@@ -756,11 +720,175 @@ proto.notion.CommandResponse.prototype.clearTagsList = function() {
 
 
 /**
- * optional bool detail = 6;
+ * repeated string levels = 2;
+ * @return {!Array<string>}
+ */
+proto.notion.CommandResponse.prototype.getLevelsList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 2));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.setLevelsList = function(value) {
+  return jspb.Message.setField(this, 2, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.addLevels = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.clearLevelsList = function() {
+  return this.setLevelsList([]);
+};
+
+
+/**
+ * repeated string categories = 3;
+ * @return {!Array<string>}
+ */
+proto.notion.CommandResponse.prototype.getCategoriesList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 3));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.setCategoriesList = function(value) {
+  return jspb.Message.setField(this, 3, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.addCategories = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 3, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.clearCategoriesList = function() {
+  return this.setCategoriesList([]);
+};
+
+
+/**
+ * optional int32 no = 4;
+ * @return {number}
+ */
+proto.notion.CommandResponse.prototype.getNo = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.setNo = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional string title = 5;
+ * @return {string}
+ */
+proto.notion.CommandResponse.prototype.getTitle = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.setTitle = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * optional string description = 6;
+ * @return {string}
+ */
+proto.notion.CommandResponse.prototype.getDescription = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.setDescription = function(value) {
+  return jspb.Message.setProto3StringField(this, 6, value);
+};
+
+
+/**
+ * optional string command = 7;
+ * @return {string}
+ */
+proto.notion.CommandResponse.prototype.getCommand = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.setCommand = function(value) {
+  return jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+/**
+ * optional string path = 8;
+ * @return {string}
+ */
+proto.notion.CommandResponse.prototype.getPath = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.notion.CommandResponse} returns this
+ */
+proto.notion.CommandResponse.prototype.setPath = function(value) {
+  return jspb.Message.setProto3StringField(this, 8, value);
+};
+
+
+/**
+ * optional bool detail = 9;
  * @return {boolean}
  */
 proto.notion.CommandResponse.prototype.getDetail = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 6, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 9, false));
 };
 
 
@@ -769,7 +897,7 @@ proto.notion.CommandResponse.prototype.getDetail = function() {
  * @return {!proto.notion.CommandResponse} returns this
  */
 proto.notion.CommandResponse.prototype.setDetail = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 6, value);
+  return jspb.Message.setProto3BooleanField(this, 9, value);
 };
 
 
