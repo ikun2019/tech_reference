@@ -21,11 +21,9 @@ export async function middleware(req) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-  console.log('user =>', user);
 
   const isProtected = req.nextUrl.pathname.startsWith('/dashboard') || req.nextUrl.pathname.startsWith('/references');
 
-  console.log('isProtected =>', isProtected)
   if (isProtected && !user) {
     const redirectUrl = new URL('/', req.url);
     redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname);

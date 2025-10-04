@@ -1,30 +1,19 @@
-FROM node:20.16.0-alpine As builder
+FROM node:20.16.0-alpine
 WORKDIR /app
 
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ARG NEXT_PUBLIC_SERVER_CLIENT_URL
-
-ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-ENV NEXT_PUBLIC_SERVER_CLIENT_URL=${NEXT_PUBLIC_SERVER_CLIENT_URL}
+ARG NODE_ENV
+# ENV NODE_ENV=${NODE_ENV}
 
 COPY package*.json ./
-RUN npm install
+
+# Install dependencies (include devDependencies only in development)
+RUN if [ "$NODE_ENV" = "development" ]; then \
+      echo "development"; \
+      npm install; \
+    else \
+      npm ci --omit=dev; \
+    fi
 
 COPY . .
-
-RUN npm run build
-
-FROM node:20.16.0-alpine
-
-WORKDIR /app
-
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-
-EXPOSE 3000
 
 CMD ["npm", "run", "start", "--", "--hostname", "0.0.0.0", "-p", "3000"]

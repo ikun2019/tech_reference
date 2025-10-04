@@ -9,60 +9,59 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-        NEXT_PUBLIC_SERVER_CLIENT_URL: ${NEXT_PUBLIC_SERVER_CLIENT_URL}
-    env_file:
-      - .client.env
+        NODE_ENV: ${NODE_ENV}
   gateway:
     platform: linux/amd64
     build:
       context: ./gateway
       dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gateway.rule=PathPrefix(`/api`)"
       - "traefik.http.routers.gateway.entrypoints=web"
       - "traefik.http.services.gateway.loadbalancer.server.port=8000"
-    env_file:
-      - .gateway.env
     depends_on:
       - content-sync_service
       - content-api_service
       - coupon_service
+      - redis
+    ports:
+      - "8000:8000"
   content-sync_service:
     platform: linux/amd64
     build:
       context: ./services/content-sync_service
       dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV}
     labels:
       - "traefik.enable=false"
-    # ports:
-    #   - "8010:8010"
-    env_file:
-      - .content-sync.env
+    depends_on:
+      - redis
   content-api_service:
     platform: linux/amd64
     build:
       context: ./services/content-api_service
       dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV}
     labels:
       - "traefik.enable=false"
-    # ports:
-    #   - "8020:8020"
-    env_file:
-      - .content-api.env
+    depends_on:
+      - redis
   coupon_service:
     platform: linux/amd64
     build:
       context: ./services/coupon_service
       dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV}
     labels:
       - "traefik.enable=false"
-    # ports:
-    #   - "8030:8030"
-    env_file:
-      - .coupon.env
+    depends_on:
+      - redis
   redis:
     image: redis:7.2
     labels:

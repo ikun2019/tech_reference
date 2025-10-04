@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
 import axiosServer from '@/utils/axiosServer';
 

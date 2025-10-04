@@ -31,6 +31,22 @@ app.use('/api/coupon', couponRouter);
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
-app.listen(8000, () => {
+const server = app.listen(8000, () => {
   console.log('🟢 gateway server is running')
 });
+
+// * graceful shutdown
+function shutdown() {
+  console.log('🟡 Shutting down gracefully');
+  server.close(() => {
+    console.log('🔴 Server closed');
+    process.exit(0);
+  });
+  setTimeout(() => {
+    console.error('⚠️ Forced shutdown');
+    process.exit(1);
+  }, 10000);
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
