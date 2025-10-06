@@ -105,7 +105,6 @@ export default function DockerReferencClient({
 		[filteredCompose]
 	);
 	const groupedSwarmByCategory = useMemo(() => groupByCategory(filteredSwarm), [filteredSwarm]);
-	console.log('groupedComposeByCategory =>', groupedComposeByCategory);
 	return (
 		<main id="page-top" className="flex-1 bg-slate-50">
 			<div className="mx-auto max-w-6xl px-6 py-8">

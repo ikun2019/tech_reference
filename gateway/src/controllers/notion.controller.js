@@ -165,8 +165,6 @@ exports.getDockerComposeCommands = async (req, res) => {
   }
 };
 
-// * GET => /api/notion/docker-compose/:path
-
 // * GET => /api/notion/docker-swarm-commands
 exports.getDockerSwarmCommands = async (req, res) => {
   try {
