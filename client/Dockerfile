@@ -1,19 +1,13 @@
 FROM node:20.16.0-alpine
 WORKDIR /app
 
-ARG NODE_ENV
-# ENV NODE_ENV=${NODE_ENV}
+ENV NODE_ENV=production
 
 COPY package*.json ./
 
 # Install dependencies (include devDependencies only in development)
-RUN if [ "$NODE_ENV" = "development" ]; then \
-      echo "development"; \
-      npm install; \
-    else \
-      npm ci --omit=dev; \
-    fi
+RUN npm install
 
 COPY . .
 
-CMD ["npm", "run", "start", "--", "--hostname", "0.0.0.0", "-p", "3000"]
+CMD ["npm", "run", "dev"]

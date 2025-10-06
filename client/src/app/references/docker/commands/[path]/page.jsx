@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 
 import MarkdownRenderer from '@/app/components/MarkdownRenderer';
 
-import { fetchServerDockerCommands, fetchServerDockerCommandDetail } from '@/lib/api/commandsAPI';
+import { fetchAllCommands, fetchServerDockerCommandDetail } from '@/lib/api/commandsAPI';
 
 // Level badge style helper (detail page)
 const levelBadgeClass = (lv) => {
@@ -22,7 +22,7 @@ const levelBadgeClass = (lv) => {
 
 const page = async ({ params }) => {
 	const { path } = await params;
-	const dockerCommands = await fetchServerDockerCommands();
+	const dockerCommands = await fetchAllCommands();
 	const command = dockerCommands.find((cmd) => cmd.path === path);
 	if (!command) notFound();
 	const commandDetail = await fetchServerDockerCommandDetail(path);

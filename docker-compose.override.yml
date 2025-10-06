@@ -13,13 +13,6 @@ services:
       - "443:443"
       - "8080:8080"
   client:
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      NEXT_PUBLIC_SERVER_CLIENT_URL: ${NEXT_PUBLIC_SERVER_CLIENT_URL}
-      SERVER_GATEWAY_URL: ${SERVER_GATEWAY_URL}
-    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0", "-p", "3000"]
     volumes:
       - ./client:/app
       - client_node_modules:/app/node_modules
@@ -32,42 +25,21 @@ services:
     ports:
       - "3000:3000"
   gateway:
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      SUPABASE_URL: ${SUPABASE_URL}
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
     command: ["npm", "run", "dev"]
     volumes:
       - ./gateway:/app
       - gateway_node_modules:/app/node_modules
   content-sync_service:
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      NOTION_TOKEN: ${NOTION_TOKEN}
-      NOTION_COMMAND_DATABASE_ID: ${NOTION_COMMAND_DATABASE_ID}
-      NOTION_STARTER_DATABASE_ID: ${NOTION_STARTER_DATABASE_ID}
-      SUPABASE_URL: ${SUPABASE_URL}
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-      SUPABASE_ROLE_KEY: ${SUPABASE_ROLE_KEY}
     command: ["npm", "run", "dev"]
     volumes:
       - ./services/content-sync_service:/app
       - content_sync_node_modules:/app/node_modules
   content-api_service:
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      SUPABASE_URL: ${SUPABASE_URL}
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-      SUPABASE_ROLE_KEY: ${SUPABASE_ROLE_KEY}
     command: ["npm", "run", "dev"]
     volumes:
       - ./services/content-api_service:/app
       - content_api_node_modules:/app/node_modules
   coupon_service:
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      SUPABASE_URL: ${SUPABASE_URL}
-      SUPABASE_ROLE_KEY: ${SUPABASE_ROLE_KEY}
     command: ["npm", "run", "dev"]
     volumes:
       - ./services/coupon_service:/app

@@ -1,11 +1,11 @@
-import axiosServer from "@/utils/axiosServer";
+import axiosClient from '@/utils/axiosClient';
 
 export const fetchServerDockerStarterKits = async () => {
-  const response = await axiosServer.get('/api/notion/docker-starters');
+  const response = await axiosClient.get('/api/notion/docker-starters');
   return response.data;
 };
 
 export const fetchServerDockerStarterKitDetail = async (path) => {
-  const response = await axiosServer.get(`/api/notion/docker-starters/${path}`);
+  const response = await axiosClient.get(`/api/notion/docker-starters/${path}`);
   return response.data;
 };

@@ -1,6 +1,9 @@
 const router = require('express').Router();
 
-const { getDockerCommands, getDockerCommandsDetail, getDockerStarters, getDockerStartersDetail, getDockerComposeCommands, getDockerSwarmCommands } = require('../controllers/notion.controller');
+const { getAllDockerCommands, getDockerCommands, getDockerCommandsDetail, getDockerStarters, getDockerStartersDetail, getDockerComposeCommands, getDockerSwarmCommands } = require('../controllers/notion.controller');
+
+// * GET => /api/notion/all-docker-commands
+router.get('/all-docker-commands', getAllDockerCommands);
 
 // * GET => /api/notion/docker-commands
 router.get('/docker-commands', getDockerCommands);

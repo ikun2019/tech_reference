@@ -1,6 +1,6 @@
 export const runtime = "nodejs";
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
-import axiosServer from '@/utils/axiosServer';
+import axiosClient from '@/utils/axiosClient';
 
 export async function POST(req) {
   try {
@@ -11,7 +11,7 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    const gatewayResponse = await axiosServer.post('/api/coupon',
+    const gatewayResponse = await axiosClient.post('/api/coupon',
       { coupon_id: coupon_id },
       { headers: { Authorization: `Bearer ${session.access_token}` } }
     );

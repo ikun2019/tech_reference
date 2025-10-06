@@ -13,8 +13,22 @@ cron.schedule('*/10 * * * *', async () => {
   console.log('🛜 StarterKit 差分同期ジョブ開始（10分間隔）...');
   try {
     const pages = await getDatabasePages(notionStarterDatabaseId);
-    let clearedListCache = false;
+    const pageIds = pages.map(p => p.id);
+    const { data: metaRows, error: metaError } = await supabase
+      .from('notion_pages_meta')
+      .select('page_id, publish, path')
+      .in('page_id', pageIds);
+    if (metaError) {
+      console.error('❌ Supabase starterkits error:', metaError);
+      return;
+    }
 
+    const metaMap = new Map(metaRows?.map(row => [row.page_id, row]));
+
+    const upsertStarterKits = [];
+    const deletePaths = [];
+    const metaUpserts = [];
+    const changedPaths = new Set();
     for (const page of pages) {
       const pageId = page.id;
 
@@ -25,18 +39,9 @@ cron.schedule('*/10 * * * *', async () => {
       const tags = page.properties?.Tags?.multi_select?.map(t => t.name) ?? [];
       const publish = page.properties?.Publish?.checkbox ?? false;
 
-      const { data: meta, error: metaError } = await supabase
-        .from('notion_pages_meta')
-        .select('publish, path')
-        .eq('page_id', pageId)
-        .maybeSingle();
-      if (metaError) {
-        console.error('❌ Supabase starterkits meta error:', metaError);
-        continue;
-      }
-
-      const prevPublish = meta?.publish ?? null;
-      const prevPath = meta?.path ?? null;
+      const prevMeta = metaMap.get(pageId);
+      const prevPublish = prevMeta?.publish ?? null;
+      const prevPath = prevMeta?.path ?? null;
 
       // 変化なしならスキップ
       if (prevPublish !== null && prevPublish === publish && prevPath === path) {
@@ -46,61 +51,60 @@ cron.schedule('*/10 * * * *', async () => {
       if (publish) {
         // 公開
         const markdown = await notionToMarkdown(pageId);
-
-        const payload = {
+        upsertStarterKits.push({
           title,
           description,
           path,
           tags,
           markdown: markdown ?? '',
-        };
-
-        const { error: upsertError } = await supabase
-          .from('all_starterkits')
-          .upsert(payload, { onConflict: ['path'] });
-
-        if (upsertError) {
-          console.error('❌ Supabase starterkits upsert error:', upsertError);
-          continue;
-        };
+        });
       } else {
         // 非公開
-        const { error: deleteError } = await supabase
-          .from('all_starterkits')
-          .delete()
-          .eq('path', path)
-        if (deleteError) {
-          console.error('❌ Supabaes starterkits delete error:', deleteError);
-        }
+        if (path) deletePaths.push(path);
       };
-      const { error: metaUpsertError } = await supabase
-        .from('notion_pages_meta')
-        .upsert({
-          page_id: pageId,
-          path,
-          publish,
-          kind: 'starter',
-          last_seen: new Date().toISOString(),
-          last_synced: new Date().toISOString()
-        }, { onConflict: ['page_id'] });
-      if (metaUpsertError) {
-        console.error('❌ Supabase starterkits meta upsert error:', metaUpsertError);
-      }
 
-      // キャッシュ無効化（一覧は一度だけ、詳細は対象のみ）
-      try {
-        if (!clearedListCache) {
-          await redis.del('list:starterkits');
-          clearedListCache = true;
-        }
-        if (path) {
-          await redis.del(`starter-markdown:${path}`);
-        }
-      } catch (e) {
-        console.error('❌ RedisStarterKitsキャッシュ削除エラー', e);
-      }
+      metaUpserts.push({
+        page_id: pageId,
+        path,
+        publish,
+        kind: 'starter',
+        last_seen: new Date().toISOString(),
+        last_synced: new Date().toISOString(),
+      });
+      if (path) changedPaths.add(path);
       console.log(`✅ 差分同期:StarterKits: pageId=${pageId} path=${path} publish=${publish}`);
     };
+
+    // Supabaseへブルク反映
+    if (upsertStarterKits.length > 0) {
+      const { error: upsertError } = await supabase
+        .from('all_starterkits')
+        .upsert(upsertStarterKits, { onConflict: ['path'] });
+      if (upsertError) console.error('❌ Supabase starterkits upsert error:', upsertError);
+    }
+    if (deletePaths.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('all_starterkits')
+        .delete()
+        .in('path', deletePaths);
+      if (deleteError) console.error('❌ Supabase starterkits delete error:', deleteError);
+    }
+    if (metaUpserts.length > 0) {
+      const { error: metaUpsertError } = await supabase
+        .from('notion_pages_meta')
+        .upsert(metaUpserts, { onConflict: ['page_id'] });
+      if (metaUpsertError) console.error('❌ Supabase starterkits meta upsert error:', metaUpsertError);
+    }
+
+    // キャッシュ無効化（一覧は一度だけ、詳細は対象のみ）
+    try {
+      const keysToDelete = ['list:starterkits', ...[...changedPaths].map(path => `starter-markdown:${path}`)];
+      if (keysToDelete.length > 0) {
+        await redis.del(keysToDelete);
+      }
+    } catch (e) {
+      console.error('❌ RedisStarterKitsキャッシュ削除エラー', e);
+    }
     console.log('🏁 Notion:StarterKits: 差分同期ジョブ完了');
   } catch (error) {
     console.error('❌ Notion:StarterKits: 差分同期エラー:', error);

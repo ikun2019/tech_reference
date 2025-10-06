@@ -15,10 +15,25 @@ cron.schedule('*/10 * * * *', async () => {
   try {
     const pages = await getDatabasePages(notionCommandDatabaseId);
 
-    let clearedListCache = false; // all-commands を一度だけ削除するためのフラグ
+    const pageIds = pages.map(p => p.id);
+    const { data: metaRows, error: metaError } = await supabase
+      .from('notion_pages_meta')
+      .select('page_id, publish, path')
+      .in('page_id', pageIds);
+    if (metaError) {
+      console.error('❌ Supabase meta error:', metaError);
+      return;
+    }
+
+    const metaMap = new Map(metaRows?.map(row => [row.page_id, row]));
+    const upsertCommands = [];
+    const deletePaths = [];
+    const metaPayloads = [];
+    const changedPaths = [];
 
     for (const page of pages) {
       const pageId = page.id;
+      const meta = metaMap.get(pageId);
 
       // Notion プロパティの安全アクセス
       const level = page.properties?.Level?.multi_select?.map(l => l.name) ?? [];
@@ -31,18 +46,6 @@ cron.schedule('*/10 * * * *', async () => {
       const category = page.properties?.Category?.multi_select?.map(c => c.name) ?? [];
       const publish = page.properties?.Publish?.checkbox ?? false;
 
-      // 直近のメタ情報を取得（存在しない場合は null を返す）
-      const { data: meta, error: metaError } = await supabase
-        .from('notion_pages_meta')
-        .select('publish, path')
-        .eq('page_id', pageId)
-        .maybeSingle();
-
-      if (metaError) {
-        console.error('❌ Supabase meta select error:', metaError);
-        continue;
-      }
-
       const prevPublish = meta?.publish ?? null;
       const prevPath = meta?.path ?? null;
 
@@ -54,7 +57,7 @@ cron.schedule('*/10 * * * *', async () => {
       if (publish) {
         // 公開：Markdown 生成して upsert
         const markdown = await notionToMarkdown(pageId);
-        const upsertPayload = {
+        upsertCommands.push({
           tags,
           level,
           number,
@@ -64,54 +67,57 @@ cron.schedule('*/10 * * * *', async () => {
           path,
           category,
           markdown: markdown ?? '',
-        };
-
-        const { error: upsertError } = await supabase
-          .from('all_commands')
-          .upsert(upsertPayload, { onConflict: ['path'] });
-        if (upsertError) {
-          console.error('❌ Supabase upsert error:', upsertError);
-          continue;
-        }
-      } else {
+        });
+      } else if (path) {
         // 非公開：対象 path を削除
-        const { error: deleteError } = await supabase
-          .from('all_commands')
-          .delete()
-          .eq('path', path);
-        if (deleteError) {
-          console.error('❌ Supabase delete error:', deleteError);
-        }
+        deletePaths.push(path);
+      }
+      // メタ情報更新用payload
+      metaPayloads.push({
+        page_id: pageId,
+        path,
+        publish,
+        kind: 'command',
+        last_seen: new Date().toISOString(),
+        last_synced: new Date().toISOString(),
+      });
+
+      if (path) {
+        changedPaths.push(path);
       }
 
-      // メタ更新（初回も含め必ず記録）
+      console.log(`✅ 差分同期:Command: pageId=${pageId} path=${path} publish=${publish}`);
+    }
+
+    // Redisキャッシュ無効化（一覧は一度だけ、詳細は対象のみ）
+    try {
+      if (changedPaths.length > 0) {
+        const keysToDelete = ['list:commands', ...changedPaths.map(path => `command-markdown:${path}`)];
+        await redis.del(keysToDelete);
+      }
+    } catch (e) {
+      console.error('❌ RedisCommandキャッシュ削除エラー:', e);
+    }
+
+    // Supabaseへのアクセスをバルクで実行
+    if (upsertCommands.length > 0) {
+      const { error: upsertError } = await supabase
+        .from('all_commands')
+        .upsert(upsertCommands, { onConflict: ['path'] });
+      if (upsertError) console.error('❌ all_commands upsert error:', upsertError);
+    };
+    if (deletePaths.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('all_commands')
+        .delete()
+        .in('path', deletePaths);
+      if (deleteError) console.error('❌ all_commands delete error:', deleteError);
+    }
+    if (metaPayloads.length > 0) {
       const { error: metaUpsertError } = await supabase
         .from('notion_pages_meta')
-        .upsert({
-          page_id: pageId,
-          path,
-          publish,
-          kind: 'command',
-          last_seen: new Date().toISOString(),
-          last_synced: new Date().toISOString(),
-        }, { onConflict: ['page_id'] });
-      if (metaUpsertError) {
-        console.error('❌ Supabase meta upsert error:', metaUpsertError);
-      }
-
-      // キャッシュ無効化（一覧は一度だけ、詳細は対象のみ）
-      try {
-        if (!clearedListCache) {
-          await redis.del('list:commands');
-          clearedListCache = true;
-        }
-        if (path) {
-          await redis.del(`command-markdown:${path}`);
-        }
-      } catch (e) {
-        console.error('❌ RedisCommandキャッシュ削除エラー:', e);
-      }
-      console.log(`✅ 差分同期:Command: pageId=${pageId} path=${path} publish=${publish}`);
+        .upsert(metaPayloads, { onConflict: ['page_id'] });
+      if (metaUpsertError) console.error('❌ meta upsert error:', metaUpsertError);
     }
     console.log('🏁 Notion:Command: 差分同期ジョブ完了');
   } catch (error) {

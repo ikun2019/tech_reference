@@ -25,6 +25,10 @@ services:
       retries: 3
       start_period: 5s
   client:
+    platform: linux/amd64
+    build:
+      context: ./client
+      dockerfile: Dockerfile.prod
     labels:
       - "traefik.enable=false"
     ports:

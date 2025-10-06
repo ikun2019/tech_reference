@@ -1,7 +1,7 @@
-import axiosServer from "@/utils/axiosServer";
+import axiosClient from '@/utils/axiosClient';
 
 export async function fetchUnlockCategories(accessToken) {
-  const response = await axiosServer.get('/api/coupon', {
+  const response = await axiosClient.get('/api/coupon', {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
   return response.data?.categories || [];

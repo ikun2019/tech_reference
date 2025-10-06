@@ -3,12 +3,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN if [ "$NODE_ENV" = "development" ]; then \
-      echo "development"; \
-      npm install; \
-    else \
-      npm ci --omit=dev; \
-    fi
+RUN npm install
 
 COPY . .
 COPY scripts/healthcheck.js ./scripts/healthcheck.js
