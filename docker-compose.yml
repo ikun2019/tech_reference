@@ -12,7 +12,11 @@ services:
     platform: linux/amd64
     build:
       context: ./client
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SERVER_CLIENT_URL: ${NEXT_PUBLIC_SERVER_CLIENT_URL}
     environment:
       NODE_ENV: ${NODE_ENV}
       NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
