@@ -22,8 +22,6 @@ services:
       - "traefik.http.routers.client.rule=PathPrefix(`/`)"
       - "traefik.http.routers.client.entrypoints=web"
       - "traefik.http.services.client.loadbalancer.server.port=3000"
-    ports:
-      - "3000:3000"
     env_file:
       - .env
   gateway:
