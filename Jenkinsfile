@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    REGISTORY = "docker.io/ikun2019"
+    REGISTRY = "docker.io/ikun2019"
     STACK_NAME = "techreference"
     DOCKER_COMPOSE_FILE = "docker-stack.yml"
     DOCKER_CLI_EXPERIMENTAL = "enabled"
@@ -23,8 +23,8 @@ pipeline {
           for (service in services){
             sh """
               echo "✅ Building image for ${service}..."
-              docker build -f ${service}/Dockerfile.prod -t ${REGISTORY}/${service}:latest ${serivce}
-              docker push ${REGISTORY}/${service}:latest
+              docker build -f ${service}/Dockerfile.prod -t ${REGISTRY}/${service}:latest ${service}
+              docker push ${REGISTRY}/${service}:latest
             """
           }
         }
@@ -33,7 +33,7 @@ pipeline {
     stage('Deploy to Docker Swarm') {
       steps {
         script {
-          edho "✅ Deploying stack ${STACK_NAME}"
+          echo "✅ Deploying stack ${STACK_NAME}"
           sh """
             docker stack deploy -c ${DOCKER_COMPOSE_FILE} ${STACK_NAME}
           """
