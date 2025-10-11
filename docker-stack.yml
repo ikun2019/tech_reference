@@ -1,0 +1,138 @@
+version: '3.9'
+
+networks:
+  tech_reference_net:
+    driver: overlay
+
+secrets:
+  supabase_url:
+    external: true
+  supabase_anon_key:
+    external: true
+  supabase_role_key:
+    external: true
+  notion_token:
+    external: true
+  notion_command_database_id:
+    external: true
+  notion_starter_database_id:
+    external: true
+
+services:
+  traefik:
+    image: traefik:v3.0
+    command:
+      - '--entryPoints.web.address=:80'
+      - '--entryPoints.websecure.address=:443'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedByDefault=false'
+      - '--certificatesresolvers.myresolver.acme.httpchallenge=true'
+      - '--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.myresolver.acme.email=0215.miyatto@gmail.com'
+      - '--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json'
+      - '--ping=true'
+      - '--ping.entryPoint=web'
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - tech_reference_net
+  client:
+    image: miyatto/techreference-client:latest
+    labels:
+      - 'traefik.enable=true'
+      # https設定
+      - 'traefik.http.routers.client.rule=PathPrefix(`/`)'
+      - 'traefik.http.routers.client.entrypoints=websecure'
+      - 'traefik.http.routers.client.tls.certresolver=myresolver'
+      # 自動リダイレクト
+      - 'traefik.http.routers.client-http.rule=PathPrefix(`/`)'
+      - 'traefik.http.routers.client-http.entrypoints=web'
+      - 'traefik.http.routers.client-http.middlewares=redirect-to-https'
+      - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
+    secrets:
+      - supabase_url
+      - supabase_anon_key
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    networks:
+      - tech_reference_net
+  gateway:
+    image: miyatto/techreference-gateway:latest
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.gateway.rule=PathPrefix(`/api`)'
+      - 'traefik.http.routers.gateway.entrypoints=web,websecure'
+      - 'traefik.http.services.gateway.loadbalancer.server.port=8000'
+      - 'traefik.http.routers.gateway.tls.certresolver=myresolver'
+    secrets:
+      - supabase_url
+      - supabase_anon_key
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    networks:
+      - tech_reference_net
+  content-sync_service:
+    image: miyatto/techreference-content-sync_service:latest
+    labels:
+      - 'traefik.enable=false'
+    secrets:
+      - notion_token
+      - notion_command_database_id
+      - notion_starter_database_id
+      - supabase_url
+      - supabase_anon_key
+      - supabase_role_key
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - tech_reference_net
+  content-api_service:
+    image: miyatto/techreference-content-api_service:latest
+    labels:
+      - 'traefik.enable=false'
+    secrets:
+      - supabase_url
+      - supabase_anon_key
+      - supabase_role_key
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - tech_reference_net
+  coupon_service:
+    image: miyatto/techreference-coupon_service:latest
+    labels:
+      - 'traefik.enable=false'
+    secrets:
+      - supabase_url
+      - supabase_role_key
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - tech_reference_net
+  redis:
+    image: redis:7.2
+    labels:
+      - 'traefik.enable=false'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - tech_reference_net

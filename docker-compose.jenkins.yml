@@ -1,0 +1,19 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    ports:
+      - "8080:8080" # JenkinsのUI
+      - "50000:50000" # エージェント接続用
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - tech_reference_net
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+volumes:
+  jenkins_home:
+networks:
+  tech_reference_net:
+    external: true
